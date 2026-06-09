@@ -347,7 +347,25 @@ function renderPhotos(){
 function handleFile(e){
   const file=e.target.files[0];if(!file||!currentDist)return;
   const r=new FileReader();
-  r.onload=ev=>{const s=getState(currentDist);s.images.push(ev.target.result);saveState(currentDist,s);document.getElementById('file-input').value='';renderPhotos();};
+  r.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=800;
+      let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const compressed=canvas.toDataURL('image/jpeg',0.6);
+      const s=getState(currentDist);
+      s.images.push(compressed);
+      try{saveState(currentDist,s);}
+      catch(err){alert('Sin espacio. Eliminá alguna foto primero.');s.images.pop();return;}
+      document.getElementById('file-input').value='';
+      renderPhotos();
+    };
+    img.src=ev.target.result;
+  };
   r.readAsDataURL(file);
 }
 
