@@ -336,12 +336,13 @@ function renderPhotos(){
   container.innerHTML='';
   s.images.forEach((url,i)=>{
     const block=document.createElement('div');block.className='upload-block';block.style.marginBottom='8px';
-    const img=document.createElement('img');img.style.cssText='width:100%;max-height:300px;object-fit:contain;display:block;background:#fafafa;';img.src=url;
+    const img=document.createElement('img');img.style.cssText='width:100%;height:auto;object-fit:contain;display:block;background:#fafafa;';img.src=url;
+    img.onclick=()=>openLightbox(url);
     const row=document.createElement('div');row.style.borderTop='1px solid var(--divider)';
     const btn=document.createElement('button');btn.className='remove-btn-full';btn.textContent='Eliminar foto '+(i+1);btn.onclick=()=>removePhoto(i);
     row.appendChild(btn);block.appendChild(img);block.appendChild(row);container.appendChild(block);
   });
-  document.getElementById('add-photo-block').style.display=s.images.length>=5?'none':'block';
+  document.getElementById('add-photo-block').style.display=s.images.length>=20?'none':'block';
 }
 
 function handleFile(e){
@@ -350,13 +351,14 @@ function handleFile(e){
   r.onload=ev=>{
     const img=new Image();
     img.onload=()=>{
-      const MAX=800;
+      const MAX=1200;
       let w=img.width,h=img.height;
       if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
       const canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
-      const compressed=canvas.toDataURL('image/jpeg',0.6);
+      const compressed=canvas.toDataURL('image/jpeg',0.75);
       const s=getState(currentDist);
       s.images.push(compressed);
       try{saveState(currentDist,s);}
@@ -370,6 +372,17 @@ function handleFile(e){
 }
 
 function removePhoto(i){const s=getState(currentDist);s.images.splice(i,1);saveState(currentDist,s);renderPhotos();}
+
+function openLightbox(src){
+  const lb=document.createElement('div');
+  lb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:999;display:flex;align-items:center;justify-content:center;';
+  const img=document.createElement('img');
+  img.style.cssText='max-width:100%;max-height:100%;object-fit:contain;';
+  img.src=src;
+  lb.appendChild(img);
+  lb.onclick=()=>document.body.removeChild(lb);
+  document.body.appendChild(lb);
+}
 
 window.addEventListener('resize',()=>{if(currentDist)drawChart(DISTS[currentDist]);});
 </script>
